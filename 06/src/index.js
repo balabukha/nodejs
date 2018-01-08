@@ -5,6 +5,7 @@ import express from 'express';
 // import _ from 'lodash';
 // import Promise from 'bluebird';
 import mongoose from 'mongoose';
+import bodyParser from 'body-parser';
 
 import Pet from './models/Pet';
 import User from './models/User';
@@ -16,21 +17,31 @@ mongoose.connect(dbURL);
 
 const app = express(); // run express
 
+// run bodyParser
+app.use(bodyParser.urlencoded());
+app.use(bodyParser.json());
+
+// User.find() - обращается самостоятельно к базе данных и выбирает все нужные значения
 app.get('/users', async (req, res) => {
   const users = await User.find();
   res.send(users);
 });
 
+// Pet.find() - обращается самостоятельно к базе данных и выбирает все нужные значения
 app.get('/pets', async (req, res) => {
-  const pets = await Pet.find();
+  // .populate('owner') - бегает по БД и ищет ref который мы указали с schema.
+  const pets = await Pet.find().populate('owner');
   res.send(pets);
 });
 
-app.post('/data', async (req, res) => {
+
+app.post('/data', (req, res) => {
   const data = req.body;
-  saveDataInDb(data);
-  res.send(data);
+  // saveDataInDb(data);
+  console.log(data);
+  return res.json({ data });
 });
+
 
 app.listen(3000, () => {
   console.log('Example app listening on port 3000!');

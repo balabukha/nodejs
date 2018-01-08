@@ -10,6 +10,8 @@ const UserSchema = new Schema({
     timestamps: true,
   });
 
+// дополнительный метод который прописываем не требует доп подключения
+
 UserSchema.methods.toJSON = function () {
   return _.pick(this, ['name']);
 };
