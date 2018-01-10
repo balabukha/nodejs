@@ -4,8 +4,15 @@ import _ from 'lodash';
 const { Schema } = mongoose;
 
 const PetSchema = new Schema({
-  type: String,
-  name: String,
+  name: {
+    type: String,
+    required: true,
+  },
+  type: {
+    type: String,
+    required: true,
+    enum: ['cat', 'dog'],
+  },
   owner: {
     type: Schema.Types.ObjectId,
     ref: 'User',
