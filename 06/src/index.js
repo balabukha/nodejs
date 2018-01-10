@@ -10,6 +10,7 @@ import bodyParser from 'body-parser';
 import Pet from './models/Pet';
 import User from './models/User';
 import saveDataInDb from './saveDataInDb';
+import isAdmin from './middlewares/isAdmin';
 
 // mongoose.Promise = Promise;
 const dbURL = 'mongodb://balabukha:86yerdna@ds245687.mlab.com:45687/balabukah';
@@ -20,6 +21,8 @@ const app = express(); // run express
 // run bodyParser
 app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
+
+// app.use(isAdmin);
 
 // User.find() - обращается самостоятельно к базе данных и выбирает все нужные значения
 app.get('/users', async (req, res) => {
@@ -35,11 +38,27 @@ app.get('/pets', async (req, res) => {
 });
 
 
-app.post('/data', (req, res) => {
+app.post('/data', async (req, res) => {
   const data = req.body;
-  // saveDataInDb(data);
-  console.log(data);
-  return res.json({ data });
+  if (!data.user) return res.status(400).send('user is required');
+  if (!data.pets) data.pets = [];
+  const user = await User.findOne({
+    name: data.user.name,
+  });
+  if (user) return res.status(400).send('User is exists');
+  try {
+    const result = await saveDataInDb(data);
+    return res.json(result);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json(err);
+  }
+});
+
+app.get('/clear', isAdmin, async (req, res) => {
+  await User.remove({});
+  await Pet.remove({});
+  return res.send('ok');
 });
 
 
@@ -62,7 +81,6 @@ app.listen(3000, () => {
 //     },
 //   ],
 // };
-
 
 // const Pet = mongoose.model('Pet', {
 //   type: String,
