@@ -22,6 +22,7 @@ frontEnd
 7_sample/src/models/ - модель для mongoose
 saveDataInDb.js - модуль для сохранения данных в mongoDb
 
+* [Getting Started]
 GET /upload - загрузка и конвертиция CSV в array
 GET /saveinDb - сохранение конвертированных данных в БД
 GET /:shopName/:productId - вывод данных, одного товара в json формате
