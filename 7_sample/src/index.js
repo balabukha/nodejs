@@ -1,71 +1,56 @@
-// 06 MongoDb
-
 import express from 'express';
-// import fetch from 'isomorphic-fetch';
-// import _ from 'lodash';
-// import Promise from 'bluebird';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
+import csvToJson from 'convert-csv-to-json';
 
-import Pet from './models/Pet';
-import User from './models/User';
 import saveDataInDb from './saveDataInDb';
 import isAdmin from './middlewares/isAdmin';
+import NikoOptSchema from './models/nikoOptSchema';
 
-import convertToJson from './csvToJson';
+// constants
+const URL_01 = `${__dirname}/URL/price_two.csv`;
+const dbURL = 'mongodb://balabukha:86yerdna@ds151908.mlab.com:51908/sample_shop';
 
-const fs = require('fs');
+let arr = []; // arr to saveinDb()
 
-// import toJson from './csvToJson';
-// mongoose.Promise = Promise;
-// const dbURL = 'mongodb://balabukha:86yerdna@ds245687.mlab.com:45687/balabukah';
-// mongoose.connect(dbURL);
+// connecting to MongoDb
+mongoose.connect(dbURL);
 
-const app = express(); // run express
+// run express
+const app = express();
 
 // run bodyParser
 app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
 
-const URL_01 = `${__dirname}/URL/price_two.csv`;
 
-// app.use(isAdmin);
-      // convertToJson( URL_01 )
-      //   .then( data => {
-      //     console.log(data);
-      //   })
-      //   .catch( console.warn );
+// app.get('/all', (req, res) => {
+//   const json = csvToJson.getJsonFromCsv(URL_01);
+//   res.send(JSON.parse(JSON.stringify(json)));
+// });
 
-app.get('/all', (req, res) => {
-  const data = convertToJson( URL_01 );
-  res.send(data);
+app.get('/:shopName/:productId', async (req, res) => {
+  if (req.params.shopName === 'nikoOpt') {
+    const item = await NikoOptSchema.findOne({
+      Reference: req.params.productId,
+    });
+    res.send(item);
+  }
+  res.send('no item :((');
 });
 
-
-// User.find() - обращается самостоятельно к базе данных и выбирает все нужные значения
-app.get('/users', async (req, res) => {
-  const users = await User.find();
-  res.send(users);
+app.get('/upload', async (req, res) => {
+  const json = await csvToJson.getJsonFromCsv(URL_01);
+  if (json !== undefined && json !== undefined) {
+    arr = json; // upload data to a global var
+    return res.status(200).send('got data');
+  }
 });
 
-// Pet.find() - обращается самостоятельно к базе данных и выбирает все нужные значения
-app.get('/pets', async (req, res) => {
-  // .populate('owner') - бегает по БД и ищет ref который мы указали с schema.
-  const pets = await Pet.find().populate('owner');
-  res.send(pets);
-});
-
-
-app.post('/data', async (req, res) => {
-  const data = req.body;
-  if (!data.user) return res.status(400).send('user is required');
-  if (!data.pets) data.pets = [];
-  const user = await User.findOne({
-    name: data.user.name,
-  });
-  if (user) return res.status(400).send('User is exists');
+app.get('/saveinDb', async (req, res) => {
   try {
-    const result = await saveDataInDb(data);
+    const result = await saveDataInDb(arr);
+    arr = []; // delete global var
     return res.json(result);
   } catch (err) {
     console.log(err);
@@ -73,59 +58,22 @@ app.post('/data', async (req, res) => {
   }
 });
 
-app.get('/clear', isAdmin, async (req, res) => {
-  await User.remove({});
-  await Pet.remove({});
-  return res.send('ok');
+// If !isAdmin -> reject
+app.post('/:shopName', isAdmin, async (req, res) => {
+  if (req.params.shopName === 'nikoOpt') {
+    await NikoOptSchema.remove({}); // removing all data from DB
+    const json = await csvToJson.getJsonFromCsv(URL_01);
+    try { // saving a new data to MongoDb
+      const result = await saveDataInDb(json);
+      return res.status(200).json(result);
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json(err);
+    }
+  }
+  res.send('no shop yet :(('); // if no shopName matches
 });
-
 
 app.listen(3000, () => {
   console.log('Example app listening on port 3000!');
 });
-
-// const data = {
-//   user: {
-//     name: 'Andrey',
-//   },
-//   pets: [
-//     {
-//       name: 'Nutella',
-//       type: 'cat',
-//     },
-//     {
-//       name: 'Motya',
-//       type: 'shinshilla',
-//     },
-//   ],
-// };
-
-// const Pet = mongoose.model('Pet', {
-//   type: String,
-//   name: String,
-// });
-
-// const kitty = new Pet({
-//   name: 'Nutells',
-//   type: 'cat',
-// });
-
-
-// kitty.save()
-// .then(() => {
-//   console.log('OK');
-// })
-// .catch((err) => {
-//   console.log('ERR', err);
-// });
-
-// const app = express(); // run express
-
-// app.get('/', (req, res) => {
-//   res.send();
-// });
-
-// app.listen(3000, () => {
-//   console.log('Example app listening on port 3000!');
-// });
-

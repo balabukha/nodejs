@@ -33,13 +33,18 @@
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.2",
     "convert-csv-to-json": "0.0.13",
+    "csv": "^2.0.0",
     "csvjson": "^5.0.0",
     "csvtojson": "^1.1.9",
     "es6-promise": "^4.2.2",
     "express": "^4.16.2",
+    "iconv": "^2.3.0",
+    "iconv-lite": "^0.4.19",
     "isomorphic-fetch": "^2.2.1",
     "lodash": "^4.17.4",
-    "mongoose": "^5.0.0-rc2"
+    "mongoose": "^5.0.0-rc2",
+    "path": "^0.12.7",
+    "request": "^2.83.0"
   },
   "devDependencies": {
     "babel-cli": "^6.16.0",
